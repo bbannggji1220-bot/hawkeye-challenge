@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QUEST 1: 매의 눈 챌린지 🦅</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+  <!-- Tone.js for Sound FX -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@400;600;700;800;900&display=swap');
+    body {
+      font-family: 'Pretendard', sans-serif;
+    }
+    .neon-border {
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.5), inset 0 0 15px rgba(59, 130, 246, 0.2);
+    }
+    .neon-glow-red {
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.6);
+    }
+    .neon-glow-green {
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+    }
+    .cyber-grid {
+      background-size: 40px 40px;
+      background-image: 
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.05); opacity: 0.4; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .radar-pulse {
+      animation: pulse-ring 2.5s infinite ease-in-out;
+    }
+    .magnifier-lens {
+      pointer-events: none;
+      border: 3px solid #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
+      position: absolute;
+      border-radius: 50%;
+      width: 140px;
+      height: 140px;
+      display: none;
+      z-index: 50;
+      background-repeat: no-repeat;
+      background-color: #0f172a;
+    }
+    .image-inspect-container {
+      background-color: #0b1120;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-white cyber-grid relative overflow-x-hidden">
+
+  <!-- Ambient Glow Elements -->
+  <div class="fixed top-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-cyan-600/15 blur-[120px] pointer-events-none"></div>
+  <div class="fixed bottom-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-purple-600/15 blur-[120px] pointer-events-none"></div>
+
+  <!-- Top Header Navigation -->
+  <header class="w-full border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 px-4 py-3 sm:px-8">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center justify-center p-2 bg-gradient-to-tr from-cyan-500 to-blue-600 rounded-xl shadow-lg shadow-cyan-500/30 text-white">
+          <i class="fa-solid fa-eye text-lg"></i>
+        </span>
+        <div>
+          <span class="text-xs uppercase tracking-wider text-cyan-400 font-bold bg-cyan-950/60 px-2 py-0.5 rounded border border-cyan-800/50">Monthly AI Day</span>
+          <h1 class="font-extrabold text-sm sm:text-base tracking-tight text-white flex items-center gap-1.5">
+            매의 눈 챌린지 <span class="text-xs">🦅</span>
+          </h1>
+        </div>
+      </div>
+      
+      <!-- Audio & Reset Controls -->
+      <div class="flex items-center space-x-2">
+        <button id="soundToggleBtn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition" title="사운드 토글">
+          <i class="fa-solid fa-volume-high text-cyan-400"></i> <span id="soundText" class="hidden sm:inline">효과음 ON</span>
+        </button>
+        <button id="restartQuickBtn" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 border border-slate-700 transition" title="처음으로">
+          <i class="fa-solid fa-rotate-left text-amber-400"></i> <span class="hidden sm:inline">초기화</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-grow max-w-5xl w-full mx-auto p-4 sm:p-6 md:p-8 flex flex-col items-center justify-center relative">
+
+    <!-- SCREEN 1: INTRO / START SCREEN -->
+    <section id="screenIntro" class="w-full max-w-2xl text-center flex flex-col items-center py-6 sm:py-10 transition-all duration-300">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs sm:text-sm font-semibold mb-6 radar-pulse">
+        <i class="fa-solid fa-microchip"></i> 월간 AI 데이 특별 부스 프로그램
+      </div>
+
+      <div class="relative mb-4">
+        <div class="text-6xl sm:text-8xl mb-2 filter drop-shadow-[0_10px_20px_rgba(56,189,248,0.3)] animate-bounce">
+          🦅
+        </div>
+      </div>
+
+      <h2 class="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight mb-3">
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400">
+          QUEST 1: 매의 눈 챌린지 🦅
+        </span>
+      </h2>
+
+      <p class="text-lg sm:text-xl text-slate-300 font-medium mb-8">
+        AI가 만든 <span class="text-rose-400 font-bold underline decoration-rose-500 decoration-wavy">가짜 이미지</span>를 골라내세요!
+      </p>
+
+      <!-- Rules Box -->
+      <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-5 sm:p-6 mb-8 text-left shadow-2xl backdrop-blur-xl">
+        <h3 class="text-sm font-bold text-slate-200 uppercase tracking-wider mb-3 flex items-center gap-2">
+          <i class="fa-solid fa-magnifying-glass-chart text-cyan-400"></i> 탐정 수사 지침 (규칙)
+        </h3>
+        <ul class="space-y-2.5 text-xs sm:text-sm text-slate-300">
+          <li class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">1</span>
+            <span>총 <strong>5개의 라운드</strong>에서 2장의 사진(A vs B) 중 <strong>AI가 생성한 가짜 사진</strong>을 찾아 클릭하세요.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">2</span>
+            <span>사진에 마우스를 올리거나 터치하면 <strong>초정밀 돋보기</strong>로 디테일을 조사할 수 있습니다.</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <span class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xs flex-shrink-0 mt-0.5">3</span>
+            <span><strong>4~5문제 이상</strong> 적발 시 탐정 배지 획득 및 승리!</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Start Button -->
+      <button id="startGameBtn" class="group relative inline-flex items-center justify-center px-8 sm:px-12 py-4 text-base sm:text-lg font-extrabold text-white transition-all duration-300 bg-gradient-to-r from-cyan-500 via-blue-600 to-indigo-600 rounded-2xl shadow-xl shadow-cyan-500/30 hover:shadow-cyan-500/50 hover:scale-105 active:scale-95 border border-cyan-400/40">
+        <span class="flex items-center gap-3">
+          <i class="fa-solid fa-user-secret text-xl group-hover:rotate-12 transition"></i>
+          탐정 모드 시작하기
+          <i class="fa-solid fa-arrow-right text-sm group-hover:translate-x-1 transition"></i>
+        </span>
+      </button>
+    </section>
+
+    <!-- SCREEN 2: ACTIVE GAMEPLAY SCREEN -->
+    <section id="screenGame" class="w-full hidden flex-col items-center">
+      
+      <!-- Top HUD: Progress & Stats -->
+      <div class="w-full flex flex-wrap items-center justify-between gap-4 mb-5 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 backdrop-blur-md">
+        <div class="flex items-center gap-3">
+          <span id="roundBadge" class="px-3 py-1 bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-xs sm:text-sm font-bold rounded-lg">
+            ROUND 1 / 5
+          </span>
+          <span class="text-xs text-slate-400">현재 탐정 점수: <strong id="liveScore" class="text-emerald-400 text-sm font-bold">0</strong> / 5</span>
+        </div>
+
+        <!-- Progress Indicator dots -->
+        <div class="flex items-center gap-1.5" id="progressDots"></div>
+
+        <div class="flex items-center gap-2 text-xs font-semibold text-cyan-400 bg-cyan-950/40 border border-cyan-800/40 px-3 py-1 rounded-lg">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>탐정 감식 모드 작동 중</span>
+        </div>
+      </div>
+
+      <!-- Question Instruction Banner (테마 제거 완료, 단일 핵심 질문 문장) -->
+      <div class="w-full text-center mb-6">
+        <h3 class="text-xl sm:text-3xl font-black text-white tracking-tight flex items-center justify-center gap-2">
+          <i class="fa-solid fa-magnifying-glass text-cyan-400 animate-pulse"></i>
+          <span>어떤 사진이 AI가 만든 가짜일까요?</span>
+        </h3>
+        <p class="text-xs sm:text-sm text-slate-400 mt-2">
+          💡 마우스나 손가락으로 사진 위를 탐색해 미세한 질감과 왜곡을 찾아보세요!
+        </p>
+      </div>
+
+      <!-- Image Pair Dual Grid -->
+      <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 mb-6">
+        
+        <!-- CARD A -->
+        <div id="cardA" class="image-card relative group bg-slate-900 border-2 border-slate-800 hover:border-cyan-400 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer flex flex-col" onclick="handlePick('A')">
+          <div class="absolute top-3 left-3 z-20 flex items-center gap-2">
+            <span class="bg-black/75 backdrop-blur-md text-white font-extrabold text-sm sm:text-base px-3 py-1 rounded-lg border border-white/20 shadow">
+              [ A ] 선택
+            </span>
+          </div>
+
+          <!-- Image Wrapper with Magnifier -->
+          <div class="relative w-full aspect-[4/3] bg-slate-950 overflow-hidden select-none image-inspect-container" data-side="A">
+            <img id="imgA" src="" alt="사진 A" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="eager" />
+            <div id="lensA" class="magnifier-lens"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-3 pointer-events-none">
+              <span class="text-cyan-300 text-xs font-bold flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-full border border-cyan-500/40 shadow">
+                <i class="fa-solid fa-hand-pointer"></i> 클릭하여 [ A ] 선택
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- CARD B -->
+        <div id="cardB" class="image-card relative group bg-slate-900 border-2 border-slate-800 hover:border-cyan-400 rounded-2xl overflow-hidden shadow-2xl transition-all duration-300 cursor-pointer flex flex-col" onclick="handlePick('B')">
+          <div class="absolute top-3 left-3 z-20 flex items-center gap-2">
+            <span class="bg-black/75 backdrop-blur-md text-white font-extrabold text-sm sm:text-base px-3 py-1 rounded-lg border border-white/20 shadow">
+              [ B ] 선택
+            </span>
+          </div>
+
+          <!-- Image Wrapper with Magnifier -->
+          <div class="relative w-full aspect-[4/3] bg-slate-950 overflow-hidden select-none image-inspect-container" data-side="B">
+            <img id="imgB" src="" alt="사진 B" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="eager" />
+            <div id="lensB" class="magnifier-lens"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-3 pointer-events-none">
+              <span class="text-cyan-300 text-xs font-bold flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-full border border-cyan-500/40 shadow">
+                <i class="fa-solid fa-hand-pointer"></i> 클릭하여 [ B ] 선택
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Inspection Helper Bar -->
+      <div class="w-full flex items-center justify-between text-xs text-slate-400 bg-slate-900/60 px-4 py-2.5 rounded-xl border border-slate-800">
+        <span class="flex items-center gap-1.5">
+          <i class="fa-solid fa-search-plus text-cyan-400"></i> 마우스를 사진 위에 올리거나 터치하면 실시간 <strong>초정밀 돋보기</strong>가 켜집니다.
+        </span>
+        <span class="hidden sm:inline text-slate-500">
+          단서 힌트: 픽셀 밀림(슬라이스), 색이 번지는 테두리(색수차), 지글거리는 잡음 패치
+        </span>
+      </div>
+    </section>
+
+    <!-- MODAL: ROUND FEEDBACK OVERLAY -->
+    <div id="feedbackModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-slate-900 border-2 border-slate-700 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative flex flex-col items-center text-center">
+        
+        <!-- Status Icon -->
+        <div id="feedbackIconWrapper" class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 shadow-lg"></div>
+
+        <h4 id="feedbackTitle" class="text-2xl font-black mb-1"></h4>
+        <p id="feedbackSubtitle" class="text-sm font-semibold mb-4 text-slate-300"></p>
+
+        <!-- AI Clue Explain Box -->
+        <div class="w-full bg-slate-950/80 border border-slate-800 rounded-2xl p-4 text-left mb-6">
+          <div class="text-xs font-bold text-cyan-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+            <i class="fa-solid fa-feather-pointed"></i> 매의 눈 탐정 수사 노트
+          </div>
+          <p id="feedbackExplanation" class="text-xs sm:text-sm text-slate-200 leading-relaxed"></p>
+        </div>
+
+        <!-- Next Round Button -->
+        <button id="nextRoundBtn" class="w-full py-3.5 px-6 rounded-xl font-extrabold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-cyan-500/30 transition-all flex items-center justify-center gap-2 text-base">
+          <span>다음 라운드로 가기</span>
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: FINAL RESULT SCREEN -->
+    <section id="screenResult" class="w-full max-w-2xl text-center hidden flex-col items-center py-6 sm:py-8 transition-all duration-300">
+      
+      <!-- Quest Badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-bold border border-slate-700 mb-6">
+        QUEST 1 최종 수사 결과
+      </div>
+
+      <!-- Result Banner Illustration -->
+      <div id="resultIcon" class="text-7xl sm:text-8xl mb-4 filter drop-shadow-2xl">
+        🎉
+      </div>
+
+      <!-- Score display -->
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <span class="text-sm text-slate-400 font-medium">최종 점수:</span>
+        <span id="finalScoreVal" class="text-4xl sm:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-emerald-400">
+          5 / 5
+        </span>
+      </div>
+
+      <!-- MANDATORY RESULT TEXT BOX -->
+      <div id="resultMessageBox" class="w-full rounded-2xl p-6 sm:p-8 mb-8 border transition-all text-center shadow-2xl">
+        <h3 id="resultMainText" class="text-xl sm:text-2xl font-black leading-snug tracking-tight mb-2"></h3>
+        <p id="resultSubNote" class="text-xs sm:text-sm text-slate-300 mt-2 font-medium"></p>
+      </div>
+
+      <!-- Detective Scorecard Summary -->
+      <div class="w-full bg-slate-900/90 border border-slate-800 rounded-2xl p-5 mb-8 text-left">
+        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center justify-between">
+          <span>라운드별 수사 기록</span>
+          <span id="accuracyPercent" class="text-cyan-400 font-extrabold">정답률 100%</span>
+        </h4>
+        <div id="resultHistoryList" class="space-y-2"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
+        <button id="replayBtn" class="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-extrabold rounded-xl shadow-lg shadow-cyan-500/30 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-rotate-right"></i> 다시 도전하기
+        </button>
+        <button id="boothCertBtn" class="w-full sm:w-auto px-6 py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-stamp text-amber-400"></i> 부스 스탬프 확인
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer Note -->
+  <footer class="w-full border-t border-slate-800/80 bg-slate-950/90 py-3 px-4 text-center text-xs text-slate-500">
+    <div class="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>AI 부스 체험관 • <strong>월간 AI 데이</strong> 매의 눈 챌린지 🦅</span>
+      <span class="text-slate-600 text-[11px]">Designed for Student Booth Experience</span>
+    </div>
+  </footer>
+
+  <!-- Custom Toast Notification Box -->
+  <div id="customToast" class="fixed bottom-6 right-6 z-50 bg-slate-800/95 border border-cyan-500 text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <i class="fa-solid fa-circle-check text-cyan-400 text-lg"></i>
+    <span id="toastMsg" class="text-xs sm:text-sm font-semibold">알림 메시지</span>
+  </div>
+
+  <script>
+    /*
+      이미지는 외부 사진을 가져오지 않고, 매 게임 시작 시 브라우저에서 캔버스로
+      직접 그려서 만듭니다(자세히 보기 돋보기를 쓸 수 있도록 data URL로 변환).
+      10개 카테고리 중 5개를 매번 무작위로 뽑고, "AI" 쪽 이미지에는 실제로
+      눈에 보이는 렌더링 결함(슬라이스 시프트/색수차/노이즈 패치)을 넣어서
+      정답 판정과 탐정 수사 노트 설명이 실제 이미지 내용과 항상 일치하도록 했습니다.
+    */
+    const CATEGORY_POOL = [
+      { name: "인물 사진",   icon: "👤", hue: 28,  kind: "portrait"  },
+      { name: "풍경 사진",   icon: "🏞️", hue: 168, kind: "landscape" },
+      { name: "동물 사진",   icon: "🐾", hue: 36,  kind: "animal"    },
+      { name: "음식 사진",   icon: "🍜", hue: 14,  kind: "food"      },
+      { name: "도시 야경",   icon: "🌃", hue: 248, kind: "city"      },
+      { name: "우주 사진",   icon: "🪐", hue: 262, kind: "space"     },
+      { name: "바다 사진",   icon: "🌊", hue: 196, kind: "ocean"     },
+      { name: "꽃 사진",     icon: "🌸", hue: 330, kind: "flower"    },
+      { name: "스포츠 사진", icon: "⚽", hue: 112, kind: "sports"    },
+      { name: "자동차 사진", icon: "🚗", hue: 8,   kind: "car"       }
+    ];
+
+    const GLITCH_INFO = {
+      slice: {
+        label: "슬라이스 시프트",
+        explain: "사진 속 가로 띠 한 부분이 옆으로 밀려서 그 구간만 결이 어긋나 있어요. 실제 사진에는 이런 픽셀 밀림이 생기지 않습니다."
+      },
+      aberration: {
+        label: "색수차(컬러 프린지)",
+        explain: "일부 영역의 테두리에 붉은빛과 청록빛이 겹쳐 번져 보여요. AI가 이미지를 합성할 때 자주 남기는 흔적입니다."
+      },
+      noise: {
+        label: "노이즈 패치",
+        explain: "사진 한 귀퉁이에 주변 결과 전혀 다른, 지글거리는 잡음 덩어리가 섞여 있어요."
+      }
+    };
+
+    function mulberry32(seed) {
+      return function () {
+        seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function hsl(h, s, l, a) {
+      a = a === undefined ? 1 : a;
+      return `hsla(${h},${s}%,${l}%,${a})`;
+    }
+
+    function drawBackdrop(ctx, w, h, hue, rng) {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, hsl(hue, 42, 16));
+      g.addColorStop(1, hsl(hue, 46, 7));
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 26; i++) {
+        ctx.fillStyle = hsl(hue + (rng() * 30 - 15), 40, 20 + rng() * 10, .5);
+        const r = 1 + rng() * 1.6;
+        ctx.beginPath();
+        ctx.arc(rng() * w, rng() * h, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawPortrait(ctx, w, h, hue, rng) {
+      drawBackdrop(ctx, w, h, hue, rng);
+      const cx = w / 2, cy = h * 0.42;
+      ctx.fillStyle = hsl(hue + 8, 50, 32);
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, w * 0.15, h * 0.19, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = hsl(hue + 8, 46, 26);
+      ctx.beginPath();
+      ctx.moveTo(cx - w * 0.24, h * 1.02);
+      ctx.quadraticCurveTo(cx, h * 0.6, cx + w * 0.24, h * 1.02);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawLandscape(ctx, w, h, hue, rng) {
+      drawBackdrop(ctx, w, h, hue, rng);
+      ctx.fillStyle = hsl(hue + 40, 70, 72, .85);
+      ctx.beginPath();
+      ctx.arc(w * 0.78, h * 0.26, 30, 0, Math.PI * 2);
+      ctx.fill();
+      for (let i = 0; i < 3; i++) {
+        const baseY = h * (0.55 + i * 0.14);
+        ctx.fillStyle = hsl(hue - i * 8, 34, 14 + i * 7);
+        ctx.beginPath();
+        ctx.moveTo(0, baseY);
+        const step = w / 6;
+        for (let x = 0; x <= w; x += step) {
+          ctx.lineTo(x, baseY - (20 + rng() * 46) * (1 - i * 0.2));
+        }
+        ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    function drawAnimal(ctx, w, h, hue, rng) {
+      drawBackdrop(ctx, w, h, hue, rng);
+      const cx = w * 0.5, cy = h * 0.58;
+      ctx.fillStyle = hsl(hue, 38, 30);
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, w * 0.22, h * 0.24, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.ellipse(cx - w * 0.14, cy - h * 0.28, w * 0.09, h * 0.1, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx - w * 0.2, cy - h * 0.32); ctx.lineTo(cx - w * 0.26, cy - h * 0.46); ctx.lineTo(cx - w * 0.12, cy - h * 0.36); ctx.closePath();
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(cx - w * 0.02, cy - h * 0.32); ctx.lineTo(cx + w * 0.02, cy - h * 0.48); ctx.lineTo(cx + w * 0.1, cy - h * 0.34); ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawFood(ctx, w, h, hue, rng) {
+      drawBackdrop(ctx, w, h, hue, rng);
+      ctx.fillStyle = hsl(hue + 30, 20, 88, .9);
+      ctx.beginPath();
+      ctx.ellipse(w / 2, h * 0.62, w * 0.3, h * 0.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+      for (let i = 0; i < 9; i++) {
+        ctx.fillStyle = hsl(hue + rng() * 40 - 10, 60, 40 + rng() * 14);
+        const ang = rng() * Math.PI * 2, rad = rng() * w * 0.18;
+        ctx.beginPath();
+        ctx.arc(w / 2 + Math.cos(ang) * rad, h * 0.6 + Math.sin(ang) * rad * 0.6, 6 + rng() * 10, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawCity(ctx, w, h, hue, rng) {
+      drawBackdrop(ctx, w, h, hue, rng);
+      let x = 0;
+      while (x < w) {
+        const bw = 24 + rng() * 40;
+        const bh = h * (0.25 + rng() * 0.5);
+        ctx.fillStyle = hsl(hue - 10, 30, 10 + rng() * 8);
+        ctx.fillRect(x, h - bh, bw, bh);
+        for (let wy = h - bh + 10; wy < h - 8; wy += 14) {
+          for (let wx = x + 6; wx < x + bw - 6; wx += 12) {
+            if (rng() > 0.45) {
+              ctx.fillStyle = hsl(46, 80, 65, .55 + rng() * .3);
+              ctx.fillRect(wx, wy, 4, 5);
+            }
+          }
+        }
+        x += bw + 4;
+      }
+    }
+
+    function drawSpace(ctx, w, h, hue, rng) {
+      ctx.fillStyle = hsl(hue, 50, 6);
+      ctx.fillRect(0, 0, w, h);
+      for (let i = 0; i < 70; i++) {
+        ctx.fillStyle = hsl(hue + rng() * 40, 20, 70 + rng() * 30, .5 + rng() * .4);
+        ctx.beginPath(); ctx.arc(rng() * w, rng() * h, rng() * 1.6, 0, Math.PI * 2); ctx.fill();
+      }
+      const px = w * (0.32 + rng() * 0.36), py = h * (0.4 + rng() * 0.2), pr = w * 0.14;
+      const g = ctx.createRadialGradient(px - pr * 0.3, py - pr * 0.3, pr * 0.2, px, py, pr);
+      g.addColorStop(0, hsl(hue + 30, 55, 55));
+      g.addColorStop(1, hsl(hue + 10, 55, 28));
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = hsl(hue + 40, 40, 60, .6);
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.ellipse(px, py, pr * 1.7, pr * 0.5, -0.3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    function drawOcean(ctx, w, h, hue, rng) {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, hsl(hue, 55, 20));
+      g.addColorStop(1, hsl(hue + 10, 60, 8));
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      for (let wv = 0; wv < 4; wv++) {
+        const wy = h * (0.3 + wv * 0.16);
+        ctx.strokeStyle = hsl(hue + wv * 6, 50, 50, .35);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let x = 0; x <= w; x += 8) {
+          const y = wy + Math.sin((x / w) * Math.PI * 4 + wv) * 6 * rng();
+          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+      for (let f = 0; f < 3; f++) {
+        const fx = rng() * w, fy = h * (0.55 + rng() * 0.35);
+        ctx.fillStyle = hsl(hue + 40 + rng() * 20, 60, 55);
+        ctx.beginPath();
+        ctx.ellipse(fx, fy, 18, 9, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(fx - 16, fy); ctx.lineTo(fx - 28, fy - 8); ctx.lineTo(fx - 28, fy + 8); ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    function drawFlower(ctx, w, h, hue, rng) {
+      drawBackdrop(ctx, w, h, hue, rng);
+      const cx = w / 2, cy = h * 0.52, petals = 6 + Math.floor(rng() * 3), pr = w * 0.13;
+      for (let i = 0; i < petals; i++) {
+        const ang = (i / petals) * Math.PI * 2;
+        ctx.fillStyle = hsl(hue + i * 4, 60, 55);
+        ctx.beginPath();
+        ctx.ellipse(cx + Math.cos(ang) * pr, cy + Math.sin(ang) * pr, pr * 0.8, pr * 0.42, ang, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.fillStyle = hsl(hue + 60, 70, 55);
+      ctx.beginPath(); ctx.arc(cx, cy, pr * 0.5, 0, Math.PI * 2); ctx.fill();
+    }
+
+    function drawSports(ctx, w, h, hue, rng) {
+      ctx.fillStyle = hsl(hue, 35, 14);
+      ctx.fillRect(0, 0, w, h);
+      for (let s = 0; s < 6; s++) {
+        ctx.fillStyle = hsl(hue, 30, s % 2 === 0 ? 20 : 24);
+        ctx.fillRect(0, h * (s / 6), w, h / 6);
+      }
+      ctx.strokeStyle = hsl(0, 0, 92, .7);
+      ctx.lineWidth = 4;
+      ctx.strokeRect(w * 0.68, h * 0.18, w * 0.26, h * 0.4);
+      const bx = w * 0.36 + rng() * w * 0.1, by = h * 0.62, br = w * 0.07;
+      ctx.fillStyle = hsl(0, 0, 94);
+      ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = hsl(hue, 30, 16);
+      for (let p = 0; p < 5; p++) {
+        const ang = p * (Math.PI * 2 / 5) + rng();
+        ctx.beginPath();
+        ctx.arc(bx + Math.cos(ang) * br * 0.5, by + Math.sin(ang) * br * 0.5, br * 0.22, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawCar(ctx, w, h, hue, rng) {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, hsl(hue + 180, 40, 22));
+      g.addColorStop(1, hsl(hue + 180, 40, 10));
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h * 0.6);
+      ctx.fillStyle = hsl(hue, 20, 16);
+      ctx.fillRect(0, h * 0.6, w, h * 0.4);
+      ctx.strokeStyle = hsl(46, 70, 60, .8);
+      ctx.lineWidth = 3;
+      ctx.setLineDash([18, 14]);
+      ctx.beginPath(); ctx.moveTo(0, h * 0.82); ctx.lineTo(w, h * 0.82); ctx.stroke();
+      ctx.setLineDash([]);
+      const cx = w * 0.5, cy = h * 0.66;
+      ctx.fillStyle = hsl(hue + 10, 55, 34);
+      ctx.beginPath();
+      ctx.moveTo(cx - w * 0.22, cy + h * 0.06);
+      ctx.quadraticCurveTo(cx - w * 0.16, cy - h * 0.09, cx, cy - h * 0.09);
+      ctx.quadraticCurveTo(cx + w * 0.16, cy - h * 0.09, cx + w * 0.22, cy + h * 0.06);
+      ctx.lineTo(cx + w * 0.22, cy + h * 0.11);
+      ctx.lineTo(cx - w * 0.22, cy + h * 0.11);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = hsl(hue, 10, 8);
+      ctx.beginPath(); ctx.arc(cx - w * 0.13, cy + h * 0.12, w * 0.045, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx + w * 0.13, cy + h * 0.12, w * 0.045, 0, Math.PI * 2); ctx.fill();
+    }
+
+    const DRAWERS = {
+      portrait: drawPortrait, landscape: drawLandscape, animal: drawAnimal, food: drawFood, city: drawCity,
+      space: drawSpace, ocean: drawOcean, flower: drawFlower, sports: drawSports, car: drawCar
+    };
+
+    function applyGlitch(ctx, w, h, rng) {
+      const types = Object.keys(GLITCH_INFO);
+      const type = types[Math.floor(rng() * types.length)];
+      if (type === "slice") {
+        const bandH = 14 + rng() * 22;
+        const y0 = rng() * (h - bandH);
+        const img = ctx.getImageData(0, y0, w, bandH);
+        const shift = 10 + Math.floor(rng() * 22);
+        const out = ctx.createImageData(w, bandH);
+        for (let row = 0; row < bandH; row++) {
+          for (let col = 0; col < w; col++) {
+            const srcCol = (col - shift + w) % w;
+            const si = (row * w + srcCol) * 4, di = (row * w + col) * 4;
+            out.data[di] = img.data[si]; out.data[di + 1] = img.data[si + 1];
+            out.data[di + 2] = img.data[si + 2]; out.data[di + 3] = img.data[si + 3];
+          }
+        }
+        ctx.putImageData(out, 0, y0);
+      } else if (type === "aberration") {
+        const dx = 5 + rng() * 6;
+        const py = h * (0.15 + rng() * 0.5), ph = h * (0.12 + rng() * 0.16);
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        ctx.globalAlpha = .35;
+        ctx.drawImage(ctx.canvas, 0, py, w, ph, dx, py, w, ph);
+        ctx.fillStyle = "rgba(255,40,80,.18)";
+        ctx.fillRect(0, py, w, ph);
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = .3;
+        ctx.drawImage(ctx.canvas, 0, py, w, ph, -dx, py, w, ph);
+        ctx.restore();
+      } else {
+        const bw = 30 + rng() * 46, bh = 22 + rng() * 30;
+        const bx = rng() * (w - bw), by = rng() * (h - bh);
+        const id = ctx.getImageData(bx, by, bw, bh);
+        for (let p = 0; p < id.data.length; p += 4) {
+          if (rng() > 0.55) {
+            const n = rng() * 255;
+            id.data[p] = n; id.data[p + 1] = n; id.data[p + 2] = n; id.data[p + 3] = 200;
+          }
+        }
+        ctx.putImageData(id, bx, by);
+      }
+      return type;
+    }
+
+    function renderToDataURL(kind, hue, seed, withGlitch) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 640; canvas.height = 480;
+      const ctx = canvas.getContext("2d");
+      const rng = mulberry32(seed);
+      DRAWERS[kind](ctx, canvas.width, canvas.height, hue, rng);
+      let glitchType = null;
+      if (withGlitch) { glitchType = applyGlitch(ctx, canvas.width, canvas.height, rng); }
+      return { url: canvas.toDataURL("image/jpeg", 0.88), glitchType };
+    }
+
+    let currentSessionQuiz = [];
+
+    function shuffleArray(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function generateNewQuizSession() {
+      const shuffledPool = shuffleArray(CATEGORY_POOL);
+      const selectedFive = shuffledPool.slice(0, 5);
+
+      return selectedFive.map((cat, idx) => {
+        const seedBase = (idx + 1) * 7919 + Math.floor(Math.random() * 100000);
+        const aiIsA = Math.random() < 0.5;
+        const real = renderToDataURL(cat.kind, cat.hue, seedBase, false);
+        const ai = renderToDataURL(cat.kind, cat.hue, seedBase + 31, true);
+        const info = GLITCH_INFO[ai.glitchType];
+        return {
+          id: idx + 1,
+          category: cat.name,
+          sideA: { url: aiIsA ? ai.url : real.url, isAi: aiIsA },
+          sideB: { url: aiIsA ? real.url : ai.url, isAi: !aiIsA },
+          aiSide: aiIsA ? "A" : "B",
+          clue: `🔍 [${cat.name}] 이 이미지에는 '${info.label}' 흔적이 있습니다. ${info.explain}`
+        };
+      });
+    }
+
+    let currentRoundIndex = 0;
+    let score = 0;
+    let roundAnswers = [];
+    let soundEnabled = true;
+    let synth = null;
+
+    function initAudio() {
+      try {
+        if (!synth && window.Tone) {
+          synth = new Tone.PolySynth(Tone.Synth).toDestination();
+          synth.volume.value = -8;
+        }
+        if (window.Tone && Tone.context && Tone.context.state !== 'running') {
+          Tone.start();
+        }
+      } catch (e) {
+        console.warn("AudioContext init info:", e);
+      }
+    }
+
+    function playSound(type) {
+      if (!soundEnabled || !synth) return;
+      try {
+        const now = Tone.now();
+        if (type === 'correct') {
+          synth.triggerAttackRelease(["E5", "G#5", "B5"], "8n", now);
+        } else if (type === 'wrong') {
+          synth.triggerAttackRelease(["C3", "F#2"], "6n", now);
+        } else if (type === 'click') {
+          synth.triggerAttackRelease("A4", "32n", now);
+        } else if (type === 'victory') {
+          synth.triggerAttackRelease(["C4", "E4", "G4", "C5"], "4n", now);
+          setTimeout(() => synth.triggerAttackRelease(["E5", "G5", "C6"], "2n"), 250);
+        }
+      } catch (err) {
+        // silent
+      }
+    }
+
+    function setupMagnifiers() {
+      ['A', 'B'].forEach(side => {
+        const container = document.querySelector(`.image-inspect-container[data-side="${side}"]`);
+        const img = document.getElementById(`img${side}`);
+        const lens = document.getElementById(`lens${side}`);
+        if (!container || !img || !lens) return;
+
+        const zoomFactor = 2.4;
+
+        function moveLens(e) {
+          e.preventDefault();
+          const rect = container.getBoundingClientRect();
+          let pageX = e.pageX || (e.touches && e.touches[0].pageX);
+          let pageY = e.pageY || (e.touches && e.touches[0].pageY);
+
+          if (!pageX || !pageY) return;
+
+          let x = pageX - rect.left - window.scrollX;
+          let y = pageY - rect.top - window.scrollY;
+
+          const lensW = lens.offsetWidth;
+          const lensH = lens.offsetHeight;
+
+          if (x < 0 || x > rect.width || y < 0 || y > rect.height) {
+            lens.style.display = 'none';
+            return;
+          }
+
+          lens.style.display = 'block';
+          lens.style.left = `${x - lensW / 2}px`;
+          lens.style.top = `${y - lensH / 2}px`;
+          lens.style.backgroundImage = `url('${img.src}')`;
+          lens.style.backgroundSize = `${rect.width * zoomFactor}px ${rect.height * zoomFactor}px`;
+          lens.style.backgroundPosition = `-${(x * zoomFactor) - (lensW / 2)}px -${(y * zoomFactor) - (lensH / 2)}px`;
+        }
+
+        container.addEventListener('mousemove', moveLens);
+        container.addEventListener('touchmove', moveLens, { passive: false });
+        container.addEventListener('mouseleave', () => { lens.style.display = 'none'; });
+        container.addEventListener('touchend', () => { lens.style.display = 'none'; });
+      });
+    }
+
+    function renderRound(index) {
+      const q = currentSessionQuiz[index];
+      if (!q) return;
+
+      document.getElementById('roundBadge').innerText = `ROUND ${index + 1} / ${currentSessionQuiz.length}`;
+      document.getElementById('liveScore').innerText = score;
+
+      ['A', 'B'].forEach(s => {
+        const card = document.getElementById(`card${s}`);
+        card.classList.remove('border-emerald-500', 'border-rose-500', 'neon-glow-green', 'neon-glow-red');
+        card.classList.add('border-slate-800');
+      });
+
+      const progressContainer = document.getElementById('progressDots');
+      progressContainer.innerHTML = '';
+      for (let i = 0; i < currentSessionQuiz.length; i++) {
+        const dot = document.createElement('div');
+        if (i < index) {
+          const ans = roundAnswers[i];
+          dot.className = `w-3 h-3 rounded-full ${ans && ans.isCorrect ? 'bg-emerald-400' : 'bg-rose-500'}`;
+        } else if (i === index) {
+          dot.className = 'w-3.5 h-3.5 rounded-full bg-cyan-400 ring-2 ring-cyan-400/40 animate-pulse';
+        } else {
+          dot.className = 'w-2.5 h-2.5 rounded-full bg-slate-700';
+        }
+        progressContainer.appendChild(dot);
+      }
+
+      const imgA = document.getElementById('imgA');
+      const imgB = document.getElementById('imgB');
+
+      imgA.src = q.sideA.url;
+      imgB.src = q.sideB.url;
+
+      document.getElementById('lensA').style.display = 'none';
+      document.getElementById('lensB').style.display = 'none';
+    }
+
+    function handlePick(selectedSide) {
+      initAudio();
+      const q = currentSessionQuiz[currentRoundIndex];
+      const isCorrect = (selectedSide === q.aiSide);
+      const cardSelected = document.getElementById(`card${selectedSide}`);
+
+      if (isCorrect) {
+        score++;
+        playSound('correct');
+        cardSelected.classList.remove('border-slate-800');
+        cardSelected.classList.add('border-emerald-500', 'neon-glow-green');
+      } else {
+        playSound('wrong');
+        cardSelected.classList.remove('border-slate-800');
+        cardSelected.classList.add('border-rose-500', 'neon-glow-red');
+      }
+
+      roundAnswers.push({
+        round: currentRoundIndex + 1,
+        userPick: selectedSide,
+        correctPick: q.aiSide,
+        isCorrect: isCorrect,
+        clue: q.clue
+      });
+
+      setTimeout(() => {
+        showFeedbackModal(isCorrect, selectedSide, q);
+      }, 400);
+    }
+
+    function showFeedbackModal(isCorrect, userPick, q) {
+      const modal = document.getElementById('feedbackModal');
+      const iconWrap = document.getElementById('feedbackIconWrapper');
+      const title = document.getElementById('feedbackTitle');
+      const subtitle = document.getElementById('feedbackSubtitle');
+      const explanation = document.getElementById('feedbackExplanation');
+      const nextBtn = document.getElementById('nextRoundBtn');
+
+      if (isCorrect) {
+        iconWrap.className = "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 bg-emerald-500/20 text-emerald-400 border border-emerald-500/40";
+        iconWrap.innerHTML = '<i class="fa-solid fa-bullseye"></i>';
+        title.innerHTML = '<span class="text-emerald-400">정답입니다! AI 적발 성공</span>';
+        subtitle.innerText = `[ ${userPick} ] 사진이 AI가 생성한 가짜 이미지가 맞습니다.`;
+      } else {
+        iconWrap.className = "w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-4 bg-rose-500/20 text-rose-400 border border-rose-500/40";
+        iconWrap.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+        title.innerHTML = '<span class="text-rose-400">아쉽습니다! 오답입니다</span>';
+        subtitle.innerText = `진짜 AI 가짜 이미지는 [ ${q.aiSide} ] 였습니다.`;
+      }
+
+      explanation.innerText = q.clue;
+
+      if (currentRoundIndex + 1 >= currentSessionQuiz.length) {
+        nextBtn.innerHTML = `<span>최종 결과 확인하기</span> <i class="fa-solid fa-flag-checkered"></i>`;
+      } else {
+        nextBtn.innerHTML = `<span>다음 라운드 (${currentRoundIndex + 2}/5)</span> <i class="fa-solid fa-chevron-right"></i>`;
+      }
+
+      modal.classList.remove('hidden');
+    }
+
+    function handleNextRound() {
+      playSound('click');
+      document.getElementById('feedbackModal').classList.add('hidden');
+      currentRoundIndex++;
+
+      if (currentRoundIndex < currentSessionQuiz.length) {
+        renderRound(currentRoundIndex);
+      } else {
+        showFinalResult();
+      }
+    }
+
+    function showFinalResult() {
+      document.getElementById('screenGame').classList.add('hidden');
+      const resultScreen = document.getElementById('screenResult');
+      resultScreen.classList.remove('hidden');
+      resultScreen.classList.add('flex');
+
+      const isVictory = (score >= 4); // 4~5개 정답 시 승리
+      const iconEl = document.getElementById('resultIcon');
+      const scoreValEl = document.getElementById('finalScoreVal');
+      const msgBox = document.getElementById('resultMessageBox');
+      const mainTextEl = document.getElementById('resultMainText');
+      const subNoteEl = document.getElementById('resultSubNote');
+
+      scoreValEl.innerText = `${score} / ${currentSessionQuiz.length}`;
+      document.getElementById('accuracyPercent').innerText = `정답률 ${(score / currentSessionQuiz.length * 100).toFixed(0)}%`;
+
+      if (isVictory) {
+        // VICTORY CONDITION: 4~5개 정답
+        playSound('victory');
+        iconEl.innerText = "🎉";
+        msgBox.className = "w-full rounded-2xl p-6 sm:p-8 mb-8 border border-emerald-500/40 bg-emerald-950/30 text-emerald-300 shadow-2xl neon-glow-green";
+        mainTextEl.innerText = "🎉 AI 격파 성공! 완벽한 인간의 눈썰미를 증명했습니다.";
+        subNoteEl.innerText = "인공지능의 정교한 딥러닝 트릭을 모두 간파했습니다. 부스 스탬프 도장을 획득하세요!";
+
+        if (window.confetti) {
+          confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+          setTimeout(() => {
+            confetti({ particleCount: 80, angle: 60, spread: 55, origin: { x: 0 } });
+            confetti({ particleCount: 80, angle: 120, spread: 55, origin: { x: 1 } });
+          }, 350);
+        }
+      } else {
+        // DEFEAT CONDITION: 3개 이하
+        playSound('wrong');
+        iconEl.innerText = "🤖";
+        msgBox.className = "w-full rounded-2xl p-6 sm:p-8 mb-8 border border-rose-500/40 bg-rose-950/30 text-rose-300 shadow-2xl neon-glow-red";
+        mainTextEl.innerText = "🤖 AI의 승리! AI의 눈속임에 속았습니다. 다음달에 만나요!";
+        subNoteEl.innerText = "AI 모델의 기술력이 눈부시게 발전했습니다. 다음번 월간 AI 데이에서 복수전을 펼쳐보세요!";
+      }
+
+      const historyList = document.getElementById('resultHistoryList');
+      historyList.innerHTML = '';
+      roundAnswers.forEach(item => {
+        const row = document.createElement('div');
+        row.className = `flex items-center justify-between p-2.5 rounded-xl text-xs sm:text-sm border ${item.isCorrect ? 'bg-emerald-950/20 border-emerald-800/40 text-emerald-300' : 'bg-rose-950/20 border-rose-800/40 text-rose-300'}`;
+        row.innerHTML = `
+          <div class="flex items-center gap-2">
+            <span class="font-bold">라운드 ${item.round}</span>
+            <span class="text-slate-300 font-medium">선택: [${item.userPick}] (AI정답: [${item.correctPick}])</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded text-xs font-black ${item.isCorrect ? 'bg-emerald-500 text-slate-950' : 'bg-rose-500 text-white'}">
+              ${item.isCorrect ? '적발 완료' : '속음'}
+            </span>
+          </div>
+        `;
+        historyList.appendChild(row);
+      });
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('customToast');
+      const toastMsg = document.getElementById('toastMsg');
+      toastMsg.innerText = msg;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2500);
+    }
+
+    function resetAndStartGame() {
+      initAudio();
+      playSound('click');
+      currentRoundIndex = 0;
+      score = 0;
+      roundAnswers = [];
+
+      currentSessionQuiz = generateNewQuizSession();
+
+      document.getElementById('screenIntro').classList.add('hidden');
+      document.getElementById('screenResult').classList.add('hidden');
+      document.getElementById('feedbackModal').classList.add('hidden');
+
+      const gameScreen = document.getElementById('screenGame');
+      gameScreen.classList.remove('hidden');
+      gameScreen.classList.add('flex');
+
+      renderRound(0);
+    }
+
+    function returnToHome() {
+      initAudio();
+      playSound('click');
+      currentRoundIndex = 0;
+      score = 0;
+      roundAnswers = [];
+
+      document.getElementById('screenGame').classList.add('hidden');
+      document.getElementById('screenResult').classList.add('hidden');
+      document.getElementById('feedbackModal').classList.add('hidden');
+
+      const intro = document.getElementById('screenIntro');
+      intro.classList.remove('hidden');
+      intro.classList.add('flex');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('startGameBtn').addEventListener('click', resetAndStartGame);
+      document.getElementById('replayBtn').addEventListener('click', resetAndStartGame);
+      document.getElementById('restartQuickBtn').addEventListener('click', returnToHome);
+      document.getElementById('nextRoundBtn').addEventListener('click', handleNextRound);
+
+      document.getElementById('soundToggleBtn').addEventListener('click', () => {
+        initAudio();
+        soundEnabled = !soundEnabled;
+        const soundText = document.getElementById('soundText');
+        const icon = document.querySelector('#soundToggleBtn i');
+        if (soundEnabled) {
+          soundText.innerText = '효과음 ON';
+          icon.className = 'fa-solid fa-volume-high text-cyan-400';
+          showToast("효과음이 켜졌습니다 🔊");
+        } else {
+          soundText.innerText = '효과음 OFF';
+          icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+          showToast("효과음이 음소거되었습니다 🔇");
+        }
+      });
+
+      document.getElementById('boothCertBtn').addEventListener('click', () => {
+        playSound('click');
+        showToast("🦅 [매의 눈 챌린지] 부스 운영자에게 화면을 보여주고 스탬프를 받으세요!");
+      });
+
+      setupMagnifiers();
+    });
+  </script>
+</body>
+</html>
