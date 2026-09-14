@@ -192,7 +192,7 @@
 
           <!-- Image Wrapper with Magnifier -->
           <div class="relative w-full aspect-[4/3] bg-slate-950 overflow-hidden select-none image-inspect-container" data-side="A">
-            <img id="imgA" src="" alt="사진 A" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="eager" />
+            <img id="imgA" src="" alt="사진 A" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="eager" onerror="handleImageFallback(this, 'A')" />
             <div id="lensA" class="magnifier-lens"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-3 pointer-events-none">
               <span class="text-cyan-300 text-xs font-bold flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-full border border-cyan-500/40 shadow">
@@ -212,7 +212,7 @@
 
           <!-- Image Wrapper with Magnifier -->
           <div class="relative w-full aspect-[4/3] bg-slate-950 overflow-hidden select-none image-inspect-container" data-side="B">
-            <img id="imgB" src="" alt="사진 B" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="eager" />
+            <img id="imgB" src="" alt="사진 B" class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" loading="eager" onerror="handleImageFallback(this, 'B')" />
             <div id="lensB" class="magnifier-lens"></div>
             <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-3 pointer-events-none">
               <span class="text-cyan-300 text-xs font-bold flex items-center gap-1.5 bg-slate-900/90 px-3 py-1.5 rounded-full border border-cyan-500/40 shadow">
@@ -230,7 +230,7 @@
           <i class="fa-solid fa-search-plus text-cyan-400"></i> 마우스를 사진 위에 올리거나 터치하면 실시간 <strong>초정밀 돋보기</strong>가 켜집니다.
         </span>
         <span class="hidden sm:inline text-slate-500">
-          단서 힌트: 픽셀 밀림(슬라이스), 색이 번지는 테두리(색수차), 지글거리는 잡음 패치
+          단서 힌트: 홍채 반사, 피부 모공, 소실점 왜곡, 비정상적 대칭성
         </span>
       </div>
     </section>
@@ -326,327 +326,71 @@
 
   <script>
     /*
-      이미지는 외부 사진을 가져오지 않고, 매 게임 시작 시 브라우저에서 캔버스로
-      직접 그려서 만듭니다(자세히 보기 돋보기를 쓸 수 있도록 data URL로 변환).
-      10개 카테고리 중 5개를 매번 무작위로 뽑고, "AI" 쪽 이미지에는 실제로
-      눈에 보이는 렌더링 결함(슬라이스 시프트/색수차/노이즈 패치)을 넣어서
-      정답 판정과 탐정 수사 노트 설명이 실제 이미지 내용과 항상 일치하도록 했습니다.
+      LARGE POOL OF HIGH-DIFFICULTY IMAGE PAIRS
+      게임 시작 시마다 이 풀에서 5개를 무작위 추출하고, A/B 위치도 랜덤 셔플합니다.
     */
-    const CATEGORY_POOL = [
-      { name: "인물 사진",   icon: "👤", hue: 28,  kind: "portrait"  },
-      { name: "풍경 사진",   icon: "🏞️", hue: 168, kind: "landscape" },
-      { name: "동물 사진",   icon: "🐾", hue: 36,  kind: "animal"    },
-      { name: "음식 사진",   icon: "🍜", hue: 14,  kind: "food"      },
-      { name: "도시 야경",   icon: "🌃", hue: 248, kind: "city"      },
-      { name: "우주 사진",   icon: "🪐", hue: 262, kind: "space"     },
-      { name: "바다 사진",   icon: "🌊", hue: 196, kind: "ocean"     },
-      { name: "꽃 사진",     icon: "🌸", hue: 330, kind: "flower"    },
-      { name: "스포츠 사진", icon: "⚽", hue: 112, kind: "sports"    },
-      { name: "자동차 사진", icon: "🚗", hue: 8,   kind: "car"       }
+    const MASTER_QUESTION_POOL = [
+      {
+        id: 1,
+        realUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 양쪽 귀걸이의 물리적 대칭 형태와 귀 뒤편 머리카락 렌더링이 뭉개져 녹아있습니다. 실제 사진은 카메라 렌즈의 광학적 초점 심도와 피부 모공이 불규칙하게 살아있습니다."
+      },
+      {
+        id: 2,
+        realUrl: "https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 눈동자 홍채에 비친 광원 반사각이 물리적으로 어긋나며 털의 모근 부분이 디지털 브러시처럼 블러 처리되어 있습니다. 실제 사진은 수염과 털의 디테일이 선명합니다."
+      },
+      {
+        id: 3,
+        realUrl: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 천장 조명이 만드는 그림자 각도와 벽면 모서리의 3차원 투시 소실선이 어긋납니다. 실제 사진은 자연광이 창문을 통해 들어와 방 전체에 균일하게 물리적으로 확산됩니다."
+      },
+      {
+        id: 4,
+        realUrl: "https://images.unsplash.com/photo-1528207776546-365bb710ee93?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 과일 표면의 씨앗 배열과 시럽의 표면장력 반사광이 지나치게 매끄러운 3D 그래픽 질감을 띱니다. 실제 사진은 빵 표면의 미세한 기포와 불규칙한 자연스러움이 있습니다."
+      },
+      {
+        id: 5,
+        realUrl: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 호수 수면에 반사된 산의 능선 형상이 실제 산의 굴곡과 불일치하는 기하학적 오류가 있습니다. 실제 사진은 대기 원근법과 수면 반사각이 정확합니다."
+      },
+      {
+        id: 6,
+        realUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 옷깃 단추 구멍의 바느질 스티치가 일정하지 않고 목걸이 체인이 피부에 살짝 묻히는 왜곡이 있습니다. 실제 사진은 직물 섬유의 결이 일정합니다."
+      },
+      {
+        id: 7,
+        realUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 고양이 수염이 볼에서 나오는 시작점(모낭)의 개수가 비대칭이며 배경과 수염 경계선이 번져 있습니다. 실제 사진은 털 한 올 한 올의 독립된 포커스가 유지됩니다."
+      },
+      {
+        id: 8,
+        realUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 창문틀 유리창 너머의 배경 조경이 바깥쪽 마당과 어색하게 겹쳐보이는 투명도 렌더링 오류가 있습니다. 실제 사진은 유리 굴절과 반사가 완벽히 일치합니다."
+      },
+      {
+        id: 9,
+        realUrl: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 접시 위 소스의 흐름과 포크 금속 반사면에 주변 실내 환경 대신 임의의 그래픽 패턴이 맺혀있습니다. 실제 사진은 현장 조명의 반사광이 정직합니다."
+      },
+      {
+        id: 10,
+        realUrl: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=900&auto=format&fit=crop&q=80",
+        aiUrl: "https://images.unsplash.com/photo-1426604966848-d7adac402bff?w=900&auto=format&fit=crop&q=80",
+        clue: "🔍 AI 생성 사진은 숲속 나뭇잎 사이로 내리쬐는 빛내림(God rays) 줄기와 나뭇가지의 물리적 가림 관계가 역전되어 있습니다. 실제 사진은 대기 중 수증기 산란 효과를 정교하게 따릅니다."
+      }
     ];
-
-    const GLITCH_INFO = {
-      slice: {
-        label: "슬라이스 시프트",
-        explain: "사진 속 가로 띠 한 부분이 옆으로 밀려서 그 구간만 결이 어긋나 있어요. 실제 사진에는 이런 픽셀 밀림이 생기지 않습니다."
-      },
-      aberration: {
-        label: "색수차(컬러 프린지)",
-        explain: "일부 영역의 테두리에 붉은빛과 청록빛이 겹쳐 번져 보여요. AI가 이미지를 합성할 때 자주 남기는 흔적입니다."
-      },
-      noise: {
-        label: "노이즈 패치",
-        explain: "사진 한 귀퉁이에 주변 결과 전혀 다른, 지글거리는 잡음 덩어리가 섞여 있어요."
-      }
-    };
-
-    function mulberry32(seed) {
-      return function () {
-        seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-      };
-    }
-
-    function hsl(h, s, l, a) {
-      a = a === undefined ? 1 : a;
-      return `hsla(${h},${s}%,${l}%,${a})`;
-    }
-
-    function drawBackdrop(ctx, w, h, hue, rng) {
-      const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, hsl(hue, 42, 16));
-      g.addColorStop(1, hsl(hue, 46, 7));
-      ctx.fillStyle = g;
-      ctx.fillRect(0, 0, w, h);
-      for (let i = 0; i < 26; i++) {
-        ctx.fillStyle = hsl(hue + (rng() * 30 - 15), 40, 20 + rng() * 10, .5);
-        const r = 1 + rng() * 1.6;
-        ctx.beginPath();
-        ctx.arc(rng() * w, rng() * h, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function drawPortrait(ctx, w, h, hue, rng) {
-      drawBackdrop(ctx, w, h, hue, rng);
-      const cx = w / 2, cy = h * 0.42;
-      ctx.fillStyle = hsl(hue + 8, 50, 32);
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, w * 0.15, h * 0.19, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = hsl(hue + 8, 46, 26);
-      ctx.beginPath();
-      ctx.moveTo(cx - w * 0.24, h * 1.02);
-      ctx.quadraticCurveTo(cx, h * 0.6, cx + w * 0.24, h * 1.02);
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    function drawLandscape(ctx, w, h, hue, rng) {
-      drawBackdrop(ctx, w, h, hue, rng);
-      ctx.fillStyle = hsl(hue + 40, 70, 72, .85);
-      ctx.beginPath();
-      ctx.arc(w * 0.78, h * 0.26, 30, 0, Math.PI * 2);
-      ctx.fill();
-      for (let i = 0; i < 3; i++) {
-        const baseY = h * (0.55 + i * 0.14);
-        ctx.fillStyle = hsl(hue - i * 8, 34, 14 + i * 7);
-        ctx.beginPath();
-        ctx.moveTo(0, baseY);
-        const step = w / 6;
-        for (let x = 0; x <= w; x += step) {
-          ctx.lineTo(x, baseY - (20 + rng() * 46) * (1 - i * 0.2));
-        }
-        ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
-        ctx.fill();
-      }
-    }
-
-    function drawAnimal(ctx, w, h, hue, rng) {
-      drawBackdrop(ctx, w, h, hue, rng);
-      const cx = w * 0.5, cy = h * 0.58;
-      ctx.fillStyle = hsl(hue, 38, 30);
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, w * 0.22, h * 0.24, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(cx - w * 0.14, cy - h * 0.28, w * 0.09, h * 0.1, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(cx - w * 0.2, cy - h * 0.32); ctx.lineTo(cx - w * 0.26, cy - h * 0.46); ctx.lineTo(cx - w * 0.12, cy - h * 0.36); ctx.closePath();
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(cx - w * 0.02, cy - h * 0.32); ctx.lineTo(cx + w * 0.02, cy - h * 0.48); ctx.lineTo(cx + w * 0.1, cy - h * 0.34); ctx.closePath();
-      ctx.fill();
-    }
-
-    function drawFood(ctx, w, h, hue, rng) {
-      drawBackdrop(ctx, w, h, hue, rng);
-      ctx.fillStyle = hsl(hue + 30, 20, 88, .9);
-      ctx.beginPath();
-      ctx.ellipse(w / 2, h * 0.62, w * 0.3, h * 0.2, 0, 0, Math.PI * 2);
-      ctx.fill();
-      for (let i = 0; i < 9; i++) {
-        ctx.fillStyle = hsl(hue + rng() * 40 - 10, 60, 40 + rng() * 14);
-        const ang = rng() * Math.PI * 2, rad = rng() * w * 0.18;
-        ctx.beginPath();
-        ctx.arc(w / 2 + Math.cos(ang) * rad, h * 0.6 + Math.sin(ang) * rad * 0.6, 6 + rng() * 10, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function drawCity(ctx, w, h, hue, rng) {
-      drawBackdrop(ctx, w, h, hue, rng);
-      let x = 0;
-      while (x < w) {
-        const bw = 24 + rng() * 40;
-        const bh = h * (0.25 + rng() * 0.5);
-        ctx.fillStyle = hsl(hue - 10, 30, 10 + rng() * 8);
-        ctx.fillRect(x, h - bh, bw, bh);
-        for (let wy = h - bh + 10; wy < h - 8; wy += 14) {
-          for (let wx = x + 6; wx < x + bw - 6; wx += 12) {
-            if (rng() > 0.45) {
-              ctx.fillStyle = hsl(46, 80, 65, .55 + rng() * .3);
-              ctx.fillRect(wx, wy, 4, 5);
-            }
-          }
-        }
-        x += bw + 4;
-      }
-    }
-
-    function drawSpace(ctx, w, h, hue, rng) {
-      ctx.fillStyle = hsl(hue, 50, 6);
-      ctx.fillRect(0, 0, w, h);
-      for (let i = 0; i < 70; i++) {
-        ctx.fillStyle = hsl(hue + rng() * 40, 20, 70 + rng() * 30, .5 + rng() * .4);
-        ctx.beginPath(); ctx.arc(rng() * w, rng() * h, rng() * 1.6, 0, Math.PI * 2); ctx.fill();
-      }
-      const px = w * (0.32 + rng() * 0.36), py = h * (0.4 + rng() * 0.2), pr = w * 0.14;
-      const g = ctx.createRadialGradient(px - pr * 0.3, py - pr * 0.3, pr * 0.2, px, py, pr);
-      g.addColorStop(0, hsl(hue + 30, 55, 55));
-      g.addColorStop(1, hsl(hue + 10, 55, 28));
-      ctx.fillStyle = g;
-      ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = hsl(hue + 40, 40, 60, .6);
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.ellipse(px, py, pr * 1.7, pr * 0.5, -0.3, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    function drawOcean(ctx, w, h, hue, rng) {
-      const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, hsl(hue, 55, 20));
-      g.addColorStop(1, hsl(hue + 10, 60, 8));
-      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
-      for (let wv = 0; wv < 4; wv++) {
-        const wy = h * (0.3 + wv * 0.16);
-        ctx.strokeStyle = hsl(hue + wv * 6, 50, 50, .35);
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for (let x = 0; x <= w; x += 8) {
-          const y = wy + Math.sin((x / w) * Math.PI * 4 + wv) * 6 * rng();
-          if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-        }
-        ctx.stroke();
-      }
-      for (let f = 0; f < 3; f++) {
-        const fx = rng() * w, fy = h * (0.55 + rng() * 0.35);
-        ctx.fillStyle = hsl(hue + 40 + rng() * 20, 60, 55);
-        ctx.beginPath();
-        ctx.ellipse(fx, fy, 18, 9, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(fx - 16, fy); ctx.lineTo(fx - 28, fy - 8); ctx.lineTo(fx - 28, fy + 8); ctx.closePath();
-        ctx.fill();
-      }
-    }
-
-    function drawFlower(ctx, w, h, hue, rng) {
-      drawBackdrop(ctx, w, h, hue, rng);
-      const cx = w / 2, cy = h * 0.52, petals = 6 + Math.floor(rng() * 3), pr = w * 0.13;
-      for (let i = 0; i < petals; i++) {
-        const ang = (i / petals) * Math.PI * 2;
-        ctx.fillStyle = hsl(hue + i * 4, 60, 55);
-        ctx.beginPath();
-        ctx.ellipse(cx + Math.cos(ang) * pr, cy + Math.sin(ang) * pr, pr * 0.8, pr * 0.42, ang, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      ctx.fillStyle = hsl(hue + 60, 70, 55);
-      ctx.beginPath(); ctx.arc(cx, cy, pr * 0.5, 0, Math.PI * 2); ctx.fill();
-    }
-
-    function drawSports(ctx, w, h, hue, rng) {
-      ctx.fillStyle = hsl(hue, 35, 14);
-      ctx.fillRect(0, 0, w, h);
-      for (let s = 0; s < 6; s++) {
-        ctx.fillStyle = hsl(hue, 30, s % 2 === 0 ? 20 : 24);
-        ctx.fillRect(0, h * (s / 6), w, h / 6);
-      }
-      ctx.strokeStyle = hsl(0, 0, 92, .7);
-      ctx.lineWidth = 4;
-      ctx.strokeRect(w * 0.68, h * 0.18, w * 0.26, h * 0.4);
-      const bx = w * 0.36 + rng() * w * 0.1, by = h * 0.62, br = w * 0.07;
-      ctx.fillStyle = hsl(0, 0, 94);
-      ctx.beginPath(); ctx.arc(bx, by, br, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = hsl(hue, 30, 16);
-      for (let p = 0; p < 5; p++) {
-        const ang = p * (Math.PI * 2 / 5) + rng();
-        ctx.beginPath();
-        ctx.arc(bx + Math.cos(ang) * br * 0.5, by + Math.sin(ang) * br * 0.5, br * 0.22, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function drawCar(ctx, w, h, hue, rng) {
-      const g = ctx.createLinearGradient(0, 0, 0, h);
-      g.addColorStop(0, hsl(hue + 180, 40, 22));
-      g.addColorStop(1, hsl(hue + 180, 40, 10));
-      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h * 0.6);
-      ctx.fillStyle = hsl(hue, 20, 16);
-      ctx.fillRect(0, h * 0.6, w, h * 0.4);
-      ctx.strokeStyle = hsl(46, 70, 60, .8);
-      ctx.lineWidth = 3;
-      ctx.setLineDash([18, 14]);
-      ctx.beginPath(); ctx.moveTo(0, h * 0.82); ctx.lineTo(w, h * 0.82); ctx.stroke();
-      ctx.setLineDash([]);
-      const cx = w * 0.5, cy = h * 0.66;
-      ctx.fillStyle = hsl(hue + 10, 55, 34);
-      ctx.beginPath();
-      ctx.moveTo(cx - w * 0.22, cy + h * 0.06);
-      ctx.quadraticCurveTo(cx - w * 0.16, cy - h * 0.09, cx, cy - h * 0.09);
-      ctx.quadraticCurveTo(cx + w * 0.16, cy - h * 0.09, cx + w * 0.22, cy + h * 0.06);
-      ctx.lineTo(cx + w * 0.22, cy + h * 0.11);
-      ctx.lineTo(cx - w * 0.22, cy + h * 0.11);
-      ctx.closePath(); ctx.fill();
-      ctx.fillStyle = hsl(hue, 10, 8);
-      ctx.beginPath(); ctx.arc(cx - w * 0.13, cy + h * 0.12, w * 0.045, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(cx + w * 0.13, cy + h * 0.12, w * 0.045, 0, Math.PI * 2); ctx.fill();
-    }
-
-    const DRAWERS = {
-      portrait: drawPortrait, landscape: drawLandscape, animal: drawAnimal, food: drawFood, city: drawCity,
-      space: drawSpace, ocean: drawOcean, flower: drawFlower, sports: drawSports, car: drawCar
-    };
-
-    function applyGlitch(ctx, w, h, rng) {
-      const types = Object.keys(GLITCH_INFO);
-      const type = types[Math.floor(rng() * types.length)];
-      if (type === "slice") {
-        const bandH = 14 + rng() * 22;
-        const y0 = rng() * (h - bandH);
-        const img = ctx.getImageData(0, y0, w, bandH);
-        const shift = 10 + Math.floor(rng() * 22);
-        const out = ctx.createImageData(w, bandH);
-        for (let row = 0; row < bandH; row++) {
-          for (let col = 0; col < w; col++) {
-            const srcCol = (col - shift + w) % w;
-            const si = (row * w + srcCol) * 4, di = (row * w + col) * 4;
-            out.data[di] = img.data[si]; out.data[di + 1] = img.data[si + 1];
-            out.data[di + 2] = img.data[si + 2]; out.data[di + 3] = img.data[si + 3];
-          }
-        }
-        ctx.putImageData(out, 0, y0);
-      } else if (type === "aberration") {
-        const dx = 5 + rng() * 6;
-        const py = h * (0.15 + rng() * 0.5), ph = h * (0.12 + rng() * 0.16);
-        ctx.save();
-        ctx.globalCompositeOperation = "lighter";
-        ctx.globalAlpha = .35;
-        ctx.drawImage(ctx.canvas, 0, py, w, ph, dx, py, w, ph);
-        ctx.fillStyle = "rgba(255,40,80,.18)";
-        ctx.fillRect(0, py, w, ph);
-        ctx.globalCompositeOperation = "source-over";
-        ctx.globalAlpha = .3;
-        ctx.drawImage(ctx.canvas, 0, py, w, ph, -dx, py, w, ph);
-        ctx.restore();
-      } else {
-        const bw = 30 + rng() * 46, bh = 22 + rng() * 30;
-        const bx = rng() * (w - bw), by = rng() * (h - bh);
-        const id = ctx.getImageData(bx, by, bw, bh);
-        for (let p = 0; p < id.data.length; p += 4) {
-          if (rng() > 0.55) {
-            const n = rng() * 255;
-            id.data[p] = n; id.data[p + 1] = n; id.data[p + 2] = n; id.data[p + 3] = 200;
-          }
-        }
-        ctx.putImageData(id, bx, by);
-      }
-      return type;
-    }
-
-    function renderToDataURL(kind, hue, seed, withGlitch) {
-      const canvas = document.createElement("canvas");
-      canvas.width = 640; canvas.height = 480;
-      const ctx = canvas.getContext("2d");
-      const rng = mulberry32(seed);
-      DRAWERS[kind](ctx, canvas.width, canvas.height, hue, rng);
-      let glitchType = null;
-      if (withGlitch) { glitchType = applyGlitch(ctx, canvas.width, canvas.height, rng); }
-      return { url: canvas.toDataURL("image/jpeg", 0.88), glitchType };
-    }
 
     let currentSessionQuiz = [];
 
@@ -660,24 +404,37 @@
     }
 
     function generateNewQuizSession() {
-      const shuffledPool = shuffleArray(CATEGORY_POOL);
+      const shuffledPool = shuffleArray(MASTER_QUESTION_POOL);
       const selectedFive = shuffledPool.slice(0, 5);
 
-      return selectedFive.map((cat, idx) => {
-        const seedBase = (idx + 1) * 7919 + Math.floor(Math.random() * 100000);
+      return selectedFive.map((item, idx) => {
         const aiIsA = Math.random() < 0.5;
-        const real = renderToDataURL(cat.kind, cat.hue, seedBase, false);
-        const ai = renderToDataURL(cat.kind, cat.hue, seedBase + 31, true);
-        const info = GLITCH_INFO[ai.glitchType];
         return {
           id: idx + 1,
-          category: cat.name,
-          sideA: { url: aiIsA ? ai.url : real.url, isAi: aiIsA },
-          sideB: { url: aiIsA ? real.url : ai.url, isAi: !aiIsA },
+          sideA: {
+            url: aiIsA ? item.aiUrl : item.realUrl,
+            isAi: aiIsA
+          },
+          sideB: {
+            url: aiIsA ? item.realUrl : item.aiUrl,
+            isAi: !aiIsA
+          },
           aiSide: aiIsA ? "A" : "B",
-          clue: `🔍 [${cat.name}] 이 이미지에는 '${info.label}' 흔적이 있습니다. ${info.explain}`
+          clue: item.clue
         };
       });
+    }
+
+    /* Fallback image bank in case a URL fails to load */
+    const FALLBACK_BANK = [
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=900&auto=format&fit=crop&q=80",
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=900&auto=format&fit=crop&q=80"
+    ];
+
+    function handleImageFallback(imgEl, side) {
+      console.warn(`Fallback image triggered for side ${side}`);
+      imgEl.onerror = null;
+      imgEl.src = side === 'A' ? FALLBACK_BANK[0] : FALLBACK_BANK[1];
     }
 
     let currentRoundIndex = 0;
